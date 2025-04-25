@@ -1,0 +1,56 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Painel de Monitoramento</title>
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Localização em Tempo Real</h2>
+  <div id="dados"></div>
+  <div id="map"></div>
+
+  <script>
+    let map, marker;
+
+    async function buscarLocalizacao() {
+      const resposta = await fetch('https://monitoramentocelular-2b5f1-defalt-rtdb.firebaseio.com/localizacao.json');
+      const texto = await resposta.text();
+      const dados = texto.replace('Lat: ', '').replace(' - Long: ', ',').split(',');
+
+      const lat = parseFloat(dados[0]);
+      const lng = parseFloat(dados[1]);
+
+      document.getElementById('dados').innerText = `Latitude: ${lat} | Longitude: ${lng}`;
+
+      const pos = { lat, lng };
+
+      if (!map) {
+        map = new google.maps.Map(document.getElementById("map"), {
+          zoom: 15,
+          center: pos
+        });
+        marker = new google.maps.Marker({ position: pos, map: map });
+      } else {
+        marker.setPosition(pos);
+        map.setCenter(pos);
+      }
+    }
+
+    setInterval(buscarLocalizacao, 10000); // Atualiza a cada 10 segundos
+    window.onload = buscarLocalizacao;
+  </script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSv70BTYE5UW7sMr-F0_dYWYKRLJyYR7k&callback=initMap">
+  </script>
+</body>
+</html>
