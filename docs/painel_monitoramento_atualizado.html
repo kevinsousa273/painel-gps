@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Painel de Monitoramento</title>
+  <style>
+    #map {
+      height: 500px;
+      width: 100%;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h2>Localização em Tempo Real</h2>
+  <div id="dados"></div>
+  <div id="map"></div>
+
+  <script>
+    let map, marker;
+
+    async function buscarLocalizacao() {
+      try {
+        const resposta = await fetch('https://monitoramentocelular-2b5f1-defalt-rtdb.firebaseio.com/localizacao.json');
+        const texto = await resposta.text();
+
+        // Processar o texto no formato "Lat: ... - Long: ..."
+        const partes = texto.match(/Lat: ([\-\d\.]+) - Long: ([\-\d\.]+)/);
+        if (!partes || partes.length < 3) {
+          document.getElementById('dados').innerText = "Formato inválido de localização.";
+          return;
+        }
+
+        const lat = parseFloat(partes[1]);
+        const lng = parseFloat(partes[2]);
+
+        document.getElementById('dados').innerText = `Latitude: ${lat} | Longitude: ${lng}`;
+        const pos = { lat, lng };
+
+        if (!map) {
+          map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 15,
+            center: pos
+          });
+          marker = new google.maps.Marker({ position: pos, map: map });
+        } else {
+          marker.setPosition(pos);
+          map.setCenter(pos);
+        }
+      } catch (erro) {
+        document.getElementById('dados').innerText = "Erro ao buscar localização.";
+        console.error("Erro ao buscar dados do Firebase:", erro);
+      }
+    }
+
+    setInterval(buscarLocalizacao, 10000); // Atualiza a cada 10 segundos
+    window.onload = buscarLocalizacao;
+  </script>
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCSv70BTYE5UW7sMr-F0_dYWYKRLJyYR7k">
+  </script>
+</body>
+</html>
